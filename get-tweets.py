@@ -77,4 +77,4 @@ if __name__ == '__main__':
 
     print("Use CTRL + C to exit at any time.\n")
     stream = Stream(auth, listener)
-    stream.filter(track=['anal'], async=True)
+    stream.filter(track=['trump'], async=True)
