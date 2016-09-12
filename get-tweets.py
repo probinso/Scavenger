@@ -17,8 +17,8 @@ import shutil
 
 
 # loads Twitter credentials from .twitter file that is in the same directory as this script
-file_dir = os.path.dirname(osp.realpath(__file__)) 
-with open(osp.join(file_dir, '.twitter-pass')) as twitter_file:  
+file_dir = os.path.dirname(osp.realpath(__file__))
+with open(osp.join(file_dir, '.twitter-pass')) as twitter_file:
     twitter_cred = json.load(twitter_file)
 
 # authentication from the credentials file above
@@ -66,7 +66,7 @@ class StdOutListener(StreamListener):
             shutil.move(filename, './'+new_name+'.'+ext)
             print(filename, file=sys.stderr)
 
-    # this is the event handler for errors    
+    # this is the event handler for errors
     def on_error(self, status):
         print(status, file=sys.stderr)
 
