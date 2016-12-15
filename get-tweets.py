@@ -54,16 +54,25 @@ class StdOutListener(StreamListener):
         tweet = json.loads(data)
 
         username = tweet['user']['name']
-        media    = tweet['entities'].get('media', [])
+        media    = tweet['extended_entities'].get('media', [])
 
         for entry in media:
             print(username, end=' : ', file=sys.stderr)
             print(entry['type'], end=' : ', file=sys.stderr)
 
-            url = entry['media_url']
+
+            post_type = entry['type']
+            if post_type == 'photo':
+                url = entry['media_url']
+            elif post_type == 'video':
+                print(entry['video_info'], file=sys.stderr)
+                urls = entry['video_info']['variants']
+                url = next(filter(lambda x: x.get('content_type', '').find('video/') == 0, urls))['url']
+
+            print(url, file=sys.stderr)
             _, ext = url.rsplit('.', 1)
 
-            filename, headers = urllib.request.urlretrieve(entry['media_url'])
+            filename, headers = urllib.request.urlretrieve(url)
             new_name = sign_path(filename)
             shutil.move(filename, '.' + osp.sep + new_name+'.'+ext)
             print(filename, file=sys.stderr)
@@ -72,6 +81,8 @@ class StdOutListener(StreamListener):
     def on_error(self, status):
         print(status, file=sys.stderr)
 
+
+user_ids = {'776268767152119808':'Team1', '776298156967342080':'Team2'}
 if __name__ == '__main__':
     listener = StdOutListener(osp.join(file_dir, 'tweets.txt'))
     auth = OAuthHandler(consumer_key, consumer_secret)
@@ -79,4 +90,4 @@ if __name__ == '__main__':
 
     print("Use CTRL + C to exit at any time.\n")
     stream = Stream(auth, listener)
-    stream.filter(track=['trump'], async=True)
+    stream.filter(follow=user_ids.keys())
