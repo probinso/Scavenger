@@ -50,10 +50,12 @@ class StdOutListener(StreamListener):
     # this is the event handler for new data
     def on_data(self, data):
         print("*", end='', file=sys.stderr)
-        tweet    = json.loads(data)
+
+        tweet = json.loads(data)
 
         username = tweet['user']['name']
         media    = tweet['entities'].get('media', [])
+
         for entry in media:
             print(username, end=' : ', file=sys.stderr)
             print(entry['type'], end=' : ', file=sys.stderr)
@@ -63,7 +65,7 @@ class StdOutListener(StreamListener):
 
             filename, headers = urllib.request.urlretrieve(entry['media_url'])
             new_name = sign_path(filename)
-            shutil.move(filename, './'+new_name+'.'+ext)
+            shutil.move(filename, '.' + osp.sep + new_name+'.'+ext)
             print(filename, file=sys.stderr)
 
     # this is the event handler for errors
