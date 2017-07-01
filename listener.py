@@ -61,6 +61,7 @@ class StdOutListener(StreamListener):
         tweet = json.loads(data)
 
         username = tweet['user']['name']
+        userid   = tweet['user']['id_str']
         media    = tweet['extended_entities'].get('media', [])
 
         for entry in media:
@@ -73,14 +74,15 @@ class StdOutListener(StreamListener):
             elif post_type == 'video':
                 print(entry['video_info'], file=sys.stderr)
                 urls = entry['video_info']['variants']
-                url = next(filter(lambda x: \
-                                  x.get('content_type', '').find('video/') == 0, urls))['url']
+                isvideo = lambda x: x.get('content_type', '').find('video/') == 0
+                url = next(filter(isvideo,urls))['url']
             print(url, file=sys.stderr)
             _, ext = url.rsplit('.', 1)
 
             filename, headers = urllib.request.urlretrieve(url)
             new_name = sign_path(filename)
             shutil.move(filename, '.' + osp.sep + new_name+'.'+ext)
+
             print(filename, file=sys.stderr)
 
     # this is the event handler for errors
@@ -88,18 +90,27 @@ class StdOutListener(StreamListener):
         print(status, file=sys.stderr)
 
 
-user_ids = {'776268767152119808':'Team1', '776298156967342080':'Team2'}
+def interface(ifname):
+    with open(ifname) as fd:
+        teams = json.load(fd)
+    users = set()
+    for T in teams:
+        for U in teams[T]:
+            users.add(U)
 
-def interface():
     listener = StdOutListener(osp.join(file_dir, 'tweets.txt'))
     auth = OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_token, access_token_secret)
 
     print('Use CTRL + C to exit at any time.\n')
     stream = Stream(auth, listener)
-    stream.filter(follow=user_ids.keys())
-
-
+    stream.filter(follow=users)
 
 if __name__ == '__main__':
-    interface()
+    try:
+        inpath  = sys.argv[1]
+    except:
+        print("usage: {}  <inpath>".format(
+            sys.argv[0]))
+        sys.exit(1)
+    interface(inpath)
