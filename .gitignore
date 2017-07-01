@@ -1,5 +1,7 @@
-# passwords
+# User Information
 .twitter-pass
+teams.json
+database.sqlite
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

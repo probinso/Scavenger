@@ -1,4 +1,4 @@
 default:
 
-database.sqlite:initialize.py teams.json
-	python initialize.py teams.json
+database.sqlite:initializer.py teams.json
+	python initializer.py teams.json
