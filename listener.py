@@ -55,35 +55,45 @@ class StdOutListener(StreamListener):
         self.filename = filename
 
     # this is the event handler for new data
+    @model.pny.db_session
     def on_data(self, data):
         print('*', end='', file=sys.stderr)
 
         tweet = json.loads(data)
+        pprint(tweet)
 
-        username = tweet['user']['name']
-        userid   = tweet['user']['id_str']
-        media    = tweet['extended_entities'].get('media', [])
+        uid_str = tweet['user']['id_str']
+        message = tweet['text']
+        pid_str = tweet['id_str']
+
+        U = model.User.get(id=uid_str)
+        P = model.Post(id=pid_str, text=message, user=U)
+
+        place = tweet['place']
+        if place:
+            geo_id = place['id']
+
+
+        media = tweet.get('extended_entities', dict()).get('media', [])
 
         for entry in media:
-            print(username, end=' : ', file=sys.stderr)
-            print(entry['type'], end=' : ', file=sys.stderr)
-
             post_type = entry['type']
             if post_type == 'photo':
-                url = entry['media_url']
+                url  = entry['media_url']
+                Media = model.Image
             elif post_type == 'video':
-                print(entry['video_info'], file=sys.stderr)
-                urls = entry['video_info']['variants']
-                isvideo = lambda x: x.get('content_type', '').find('video/') == 0
-                url = next(filter(isvideo,urls))['url']
-            print(url, file=sys.stderr)
+                urls  = entry['video_info']['variants']
+                vfilt = lambda x: x.get('content_type', '').find('video/') == 0
+                url   = next(filter(vfilt, urls))['url']
+                Media = model.Video
+            else:
+                continue
             _, ext = url.rsplit('.', 1)
 
             filename, headers = urllib.request.urlretrieve(url)
-            new_name = sign_path(filename)
-            shutil.move(filename, '.' + osp.sep + new_name+'.'+ext)
-
-            print(filename, file=sys.stderr)
+            new_name = sign_path(filename) + '.' + ext
+            shutil.move(filename, '.' + osp.sep + new_name)
+            Media(id=new_name, post=P)
 
     # this is the event handler for errors
     def on_error(self, status):

@@ -18,6 +18,7 @@ class Post(db.Entity):
     location = pny.Optional('Location')
     images = pny.Set('Image')
     videos = pny.Set('Video')
+    text   = pny.Required(pny.LongUnicode)
 
 
 class User(db.Entity):
